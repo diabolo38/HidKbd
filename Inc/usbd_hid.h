@@ -55,24 +55,18 @@
 #define HID_EPOUT_ADDR                0x01
 #define HID_EPOUT_SIZE                0x08
 
-#if HID_IS_MOUSE
-#define HID_EPIN_SIZE                 0x04
-#define CFG_ADD_SIZE                    0x0
-#else
-#define HID_EPIN_SIZE                 8
+#define HID_EPIN_SIZE                 16
 #define CFG_ADD_SIZE                  7 /* one ep */
-#endif
-
-
 
 #define USB_HID_CONFIG_DESC_SIZ       (34+CFG_ADD_SIZE)
 
 #define USB_HID_DESC_SIZ              9
 
-#if HID_IS_MOUSE
-#define HID_REPORT_DESC_SIZE    50
+#define HAVE_REPORT_ID 2
+#if HAVE_REPORT_ID
+#   define HID_REPORT_DESC_SIZE    47
 #else
-#define HID_REPORT_DESC_SIZE    45
+#   define HID_REPORT_DESC_SIZE    45
 #endif
 
 #define HID_DESCRIPTOR_TYPE           0x21

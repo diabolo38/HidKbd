@@ -77,9 +77,11 @@ struct mouse_report_t
 
 struct keyboard_report_t
 {
-    uint8_t report_id;
+#if HAVE_REPORT_ID
+    uint8_t id;
+#endif
     uint8_t modifier;
-//    uint8_t reserved;
+    uint8_t reserved;
     uint8_t keycode[6];
 } kbd_report;
 
@@ -232,6 +234,9 @@ void kbd_send_ch(uint8_t ch){
     else
         code = ch;
 
+#if HAVE_REPORT_ID
+    kbd_report.id = HAVE_REPORT_ID;
+#endif
     kbd_report.keycode[0]=code&0x7F;
     kbd_report.keycode[1]=0;
     if ( code & 0x80) {                  // it's a capital letter or other character reached with shift
