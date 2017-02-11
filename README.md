@@ -12,12 +12,12 @@ The generated usb class files are exclude from build
 
 - Debug 
 
-101 std + come control (no led 
+101 std + volume  control (no led) 
 
-- Debuf_led Debg led  
+- Debuf_led   
 
-101 std + led handling 
-keyboard leds  reflected on Discovery F4 user leds 
+101 std + led handling and volume control  
+keyboard leds reflected on Discovery F4 user leds 
 
 #how to use 
 No fency user UI was done 
