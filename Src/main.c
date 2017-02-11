@@ -77,9 +77,9 @@ struct mouse_report_t
 
 struct keyboard_report_t
 {
-#if HAVE_REPORT_ID
+
     uint8_t id;
-#endif
+
     uint8_t modifier;
     uint8_t reserved;
     uint8_t keycode[6];
@@ -234,9 +234,9 @@ void kbd_send_ch(uint8_t ch){
     else
         code = ch;
 
-#if HAVE_REPORT_ID
-    kbd_report.id = HAVE_REPORT_ID;
-#endif
+
+    kbd_report.id = 1;
+
     kbd_report.keycode[0]=code&0x7F;
     kbd_report.keycode[1]=0;
     if ( code & 0x80) {                  // it's a capital letter or other character reached with shift
@@ -259,6 +259,37 @@ void kbd_send_str(const char *str){
         str++;
     }
 }
+
+
+int kbd_vol_up(){
+    uint8_t report[3];
+    report[0]= VOLUME_REPORT;
+    report[1]= 0xE9;
+    report[2]= 0x00;
+    USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
+    HAL_Delay(30);
+
+    report[0]= VOLUME_REPORT;
+    report[1]= 0x00;
+    report[2]= 0x00;
+    USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
+
+}
+
+int kbd_vol_down(){
+    uint8_t report[3];
+    report[0]= VOLUME_REPORT;
+    report[1]= 0xEA;
+    report[2]= 0x00;
+    USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
+    HAL_Delay(30);
+
+    report[0]= VOLUME_REPORT;
+    report[1]= 0x00;
+    report[2]= 0x00;
+    USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
+
+}
 /* USER CODE END 0 */
 
 int main(void)
@@ -266,6 +297,8 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
     int send=0;
+    char str[10]="test";
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -290,16 +323,21 @@ int main(void)
   {
   /* USER CODE END WHILE */
       if( send){
-          if( HID_IS_MOUSE ){
-              mice_report.x = 2;
-              mice_report.y = 2;
-              USBD_HID_SendReport(&hUsbDeviceFS, (uint8_t *)&mice_report, sizeof(mice_report));
-          }else{
-              char str[10]="test";
+          switch (send ) {
+          case 1 :
               kbd_send_str(str);
-              send=0;
+              break;
+          case 2 :
+              kbd_vol_down();
+              break;
+          case 3 :
+              kbd_vol_up();
+              break;
+
           }
           HAL_Delay(1000);
+          send = 0;
+
       }
   /* USER CODE BEGIN 3 */
 

@@ -235,10 +235,9 @@ __ALIGN_BEGIN static uint8_t HID_ReportDesc[HID_REPORT_DESC_SIZE]  __ALIGN_END =
         0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
         0x09, 0x06,        // Usage (Keyboard)
         0xA1, 0x01,        // Collection (Application)
-#if HAVE_REPORT_ID
-        0x85, 0x02,        //   Report ID (2)
-//        0x85, 0x00,        //   Report ID (0)
-#endif
+
+        0x85, 0x01,        //   Report ID (1)
+
         0x05, 0x07,        //   Usage Page (Kbrd/Keypad)
         0x19, 0xE0,        //   Usage Minimum (0xE0)
         0x29, 0xE7,        //   Usage Maximum (0xE7)
@@ -263,6 +262,25 @@ __ALIGN_BEGIN static uint8_t HID_ReportDesc[HID_REPORT_DESC_SIZE]  __ALIGN_END =
         0xC0,              // End Collection
 
         // 47 bytes
+#if VOLUME_REPORT
+        //help from http://www.microchip.com/forums/m618147.aspx
+
+        0x05, 0x0C,        // Usage Page (Consumer)
+        0x09, 0x01,        // Usage (Consumer Control)
+        0xA1, 0x01,        // Collection (Application)
+        0x85, VOLUME_REPORT,        //   Report ID (VOLUME_REPORT )
+        0x19, 0x00,        //   Usage Minimum (Unassigned)
+        0x2A, 0x3C, 0x02,  //   Usage Maximum (AC Format)
+        0x15, 0x00,        //   Logical Minimum (0)
+        0x26, 0x3C, 0x02,  //   Logical Maximum (572)
+        0x95, 0x01,        //   Report Count (1)
+        0x75, 0x10,        //   Report Size (16)
+        0x81, 0x00,        //   Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+        0xC0,              // End Collection
+
+        // 25 bytes
+
+#endif
 }; 
 
 

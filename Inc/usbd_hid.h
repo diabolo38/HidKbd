@@ -62,11 +62,13 @@
 
 #define USB_HID_DESC_SIZ              9
 
-#define HAVE_REPORT_ID 2
-#if HAVE_REPORT_ID
-#   define HID_REPORT_DESC_SIZE    47
+#define HID_REPORT_DESC_SIZE    (47+HID_VOL_SIZE)
+
+#define  VOLUME_REPORT  2
+#if VOLUME_REPORT
+#   define HID_VOL_SIZE    25
 #else
-#   define HID_REPORT_DESC_SIZE    45
+#   define HID_VOL_SIZE    0
 #endif
 
 #define HID_DESCRIPTOR_TYPE           0x21
