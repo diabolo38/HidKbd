@@ -45,7 +45,20 @@
   * @{
   */ 
 
-#define HID_IS_MOUSE    0
+/** set this to 0/1 if to have led or not
+ * it can be defined in the build configuraton symbol */
+#ifndef  HID_LED_SUPPORT
+#   define HID_LED_SUPPORT 0
+#endif
+
+ /**  define  VOLUME_REPORT  to tehr eport ID to use for volume or 0 if not support*/
+#ifndef   VOLUME_REPORT
+#   define  VOLUME_REPORT  2
+#endif
+
+#if VOLUME_REPORT == 1
+#     error "volume report can't be 1 already sued for stad report"
+#endif
 
 /** @defgroup USBD_HID_Exported_Defines
   * @{
@@ -56,20 +69,39 @@
 #define HID_EPOUT_SIZE                0x08
 
 #define HID_EPIN_SIZE                 16
-#define CFG_ADD_SIZE                  7 /* one ep */
+
+ #if  HID_LED_SUPPORT
+#   define CFG_ADD_SIZE                  7 /* one ep */
+#   define HID_NUM_EP   2
+#else
+#   define CFG_ADD_SIZE                  0
+#   define HID_NUM_EP   1
+#endif
 
 #define USB_HID_CONFIG_DESC_SIZ       (34+CFG_ADD_SIZE)
 
 #define USB_HID_DESC_SIZ              9
 
-#define HID_REPORT_DESC_SIZE    (47+HID_VOL_SIZE)
 
-#define  VOLUME_REPORT  2
+
+
 #if VOLUME_REPORT
 #   define HID_VOL_SIZE    25
 #else
 #   define HID_VOL_SIZE    0
 #endif
+
+
+#if HID_LED_SUPPORT
+#   define HID_LED_SIZE    18
+#else
+#   define HID_LED_SIZE    0
+#endif
+
+
+
+#define HID_REPORT_DESC_SIZE    (47+HID_VOL_SIZE+HID_LED_SIZE)
+
 
 #define HID_DESCRIPTOR_TYPE           0x21
 #define HID_REPORT_DESC               0x22
@@ -143,6 +175,9 @@ uint8_t USBD_HID_SendReport (USBD_HandleTypeDef *pdev,
 
 uint32_t USBD_HID_GetPollingInterval (USBD_HandleTypeDef *pdev);
 
+
+/** user redifinable */
+void USBD_HID_GetReport(uint8_t * OutData, int len);
 /**
   * @}
   */ 

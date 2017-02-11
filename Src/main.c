@@ -235,6 +235,8 @@ void kbd_send_ch(uint8_t ch){
         code = ch;
 
 
+    //id set here must be consistent with the one in Hid report descriptor
+    //    0x85, 0x01,        //   Report ID (1)
     kbd_report.id = 1;
 
     kbd_report.keycode[0]=code&0x7F;
@@ -261,7 +263,7 @@ void kbd_send_str(const char *str){
 }
 
 
-int kbd_vol_up(){
+void  kbd_vol_up(){
     uint8_t report[3];
     report[0]= VOLUME_REPORT;
     report[1]= 0xE9;
@@ -276,7 +278,7 @@ int kbd_vol_up(){
 
 }
 
-int kbd_vol_down(){
+void  kbd_vol_down(){
     uint8_t report[3];
     report[0]= VOLUME_REPORT;
     report[1]= 0xEA;
@@ -290,6 +292,25 @@ int kbd_vol_down(){
     USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
 
 }
+
+void USBD_HID_GetReport(uint8_t * report, int len){
+    // see from http://www.microchip.com/forums/m433757.aspx
+    // report[0] is the report id
+    // report[1] is the led bit filed
+    // D0: NUM lock
+    // D1: CAPS lock
+    // D2: SCROLL lock
+    // D3: Compose
+    // D4: Kana
+    if ( report[0]==1 ){ // report id 1 is "led" refer to report id in hid report des
+        HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin , report[1]&0x01? GPIO_PIN_SET: GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin , report[1]&0x02? GPIO_PIN_SET: GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin , report[1]&0x04? GPIO_PIN_SET: GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin , report[1]&0x08? GPIO_PIN_SET: GPIO_PIN_RESET);
+    }
+
+}
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -314,31 +335,32 @@ int main(void)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  /* USER CODE END WHILE */
       if( send){
-          switch (send ) {
-          case 1 :
-              kbd_send_str(str);
-              break;
-          case 2 :
-              kbd_vol_down();
-              break;
-          case 3 :
-              kbd_vol_up();
-              break;
+           switch (send ) {
+           case 1 :
+               kbd_send_str(str);
+               break;
+           case 2 :
+               kbd_vol_down();
+               break;
+           case 3 :
+               kbd_vol_up();
+               break;
 
-          }
-          HAL_Delay(1000);
-          send = 0;
+           }
+           HAL_Delay(1000);
+           send = 0;
 
-      }
+       }
+  
+  /* USER CODE END WHILE */
+
   /* USER CODE BEGIN 3 */
 
   }

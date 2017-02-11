@@ -118,7 +118,7 @@
 #define MEMS_INT2_Pin GPIO_PIN_1
 #define MEMS_INT2_GPIO_Port GPIOE
 /* USER CODE BEGIN Private defines */
-
+//#define HAL_SPI_MODULE_ENABLED
 /* USER CODE END Private defines */
 
 /**

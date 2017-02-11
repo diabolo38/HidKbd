@@ -158,7 +158,8 @@ __ALIGN_BEGIN static uint8_t USBD_HID_CfgDesc[USB_HID_CONFIG_DESC_SIZ]  __ALIGN_
   USB_DESC_TYPE_INTERFACE,/*bDescriptorType: Interface descriptor type*/
   0x00,         /*bInterfaceNumber: Number of Interface*/
   0x00,         /*bAlternateSetting: Alternate setting*/
-  0x02,         /*bNumEndpoints*/
+  HID_NUM_EP,
+
   0x03,         /*bInterfaceClass: HID*/
 
   0x01,         /*bInterfaceSubClass : 1=BOOT, 0=no boot*/
@@ -186,6 +187,7 @@ __ALIGN_BEGIN static uint8_t USBD_HID_CfgDesc[USB_HID_CONFIG_DESC_SIZ]  __ALIGN_
   0x00,
   HID_FS_BINTERVAL,          /*bInterval: Polling Interval (10 ms)*/
   /* 34 */
+#if   HID_LED_SUPPORT
   0x07,          /*bLength: Endpoint Descriptor size*/
   USB_DESC_TYPE_ENDPOINT, /*bDescriptorType:*/
 
@@ -194,6 +196,7 @@ __ALIGN_BEGIN static uint8_t USBD_HID_CfgDesc[USB_HID_CONFIG_DESC_SIZ]  __ALIGN_
   HID_EPOUT_SIZE, /*wMaxPacketSize: 4 Byte max */
   0x00,
   HID_FS_BINTERVAL,          /*bInterval: Polling Interval (10 ms)*/
+#endif
   /* 41 */
 
 } ;
@@ -230,7 +233,7 @@ __ALIGN_BEGIN static uint8_t USBD_HID_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_
 
 __ALIGN_BEGIN static uint8_t HID_ReportDesc[HID_REPORT_DESC_SIZE]  __ALIGN_END =
 {
-        //copy from ardduino code https://github.com/arduino-libraries/Keyboard/blob/master/src/Keyboard.cpp
+        //copy from arduino code https://github.com/arduino-libraries/Keyboard/blob/master/src/Keyboard.cpp
 
         0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
         0x09, 0x06,        // Usage (Keyboard)
@@ -251,6 +254,18 @@ __ALIGN_BEGIN static uint8_t HID_ReportDesc[HID_REPORT_DESC_SIZE]  __ALIGN_END =
         0x95, 0x01,        //   Report Count (1)
         0x75, 0x08,        //   Report Size (8)
         0x81, 0x03,        //   Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+#if HID_LED_SUPPORT
+            // --------------------- output report for LED
+    0x95, 0x05,                    //   REPORT_COUNT (5)
+    0x75, 0x01,                    //   REPORT_SIZE (1)
+    0x05, 0x08,                    //   USAGE_PAGE (LEDs)
+    0x19, 0x01,                    //   USAGE_MINIMUM (Num Lock)
+    0x29, 0x05,                    //   USAGE_MAXIMUM (Kana)
+    0x91, 0x02,                    //   OUTPUT (Data,Var,Abs)
+    0x95, 0x01,                    //   REPORT_COUNT (1)
+    0x75, 0x03,                    //   REPORT_SIZE (3)
+    0x91, 0x03,                    //   OUTPUT (Cnst,Var,Abs)
+#endif
         0x95, 0x06,        //   Report Count (6)
         0x75, 0x08,        //   Report Size (8)
         0x15, 0x00,        //   Logical Minimum (0)
@@ -283,10 +298,14 @@ __ALIGN_BEGIN static uint8_t HID_ReportDesc[HID_REPORT_DESC_SIZE]  __ALIGN_END =
 #endif
 }; 
 
-
 uint32_t  nOutData;
-uint8_t OutData[8];
+uint8_t OutDataBuffer[HID_EPOUT_SIZE]; // local copy for user (usb fly at same time)
+uint8_t OutData[HID_EPOUT_SIZE]; // live usb buffer
 
+#ifdef DEBUG
+
+uint8_t OutDataLog[8*HID_EPOUT_SIZE];
+#endif
 /**
   * @}
   */ 
@@ -312,12 +331,13 @@ static uint8_t  USBD_HID_Init (USBD_HandleTypeDef *pdev,
                  HID_EPIN_ADDR,
                  USBD_EP_TYPE_INTR,
                  HID_EPIN_SIZE);  
+#if HID_LED_SUPPORT
+    USBD_LL_OpenEP(pdev,
+            HID_EPOUT_ADDR,
+            USBD_EP_TYPE_INTR,
+            HID_EPOUT_SIZE);
+#endif
   
-  USBD_LL_OpenEP(pdev,
-          HID_EPOUT_ADDR,
-                 USBD_EP_TYPE_INTR,
-                 HID_EPOUT_SIZE);
-
   pdev->pClassData = USBD_malloc(sizeof (USBD_HID_HandleTypeDef));
   
   if(pdev->pClassData == NULL)
@@ -326,8 +346,11 @@ static uint8_t  USBD_HID_Init (USBD_HandleTypeDef *pdev,
   }
   else
   {
+#if HID_LED_SUPPORT
      USBD_LL_PrepareReceive(pdev, HID_EPOUT_ADDR, OutData, HID_EPOUT_SIZE);
+#endif
     ((USBD_HID_HandleTypeDef *)pdev->pClassData)->state = HID_IDLE;
+
   }
   return ret;
 }
@@ -528,15 +551,24 @@ static uint8_t  USBD_HID_DataIn (USBD_HandleTypeDef *pdev,
 }
 
 
+__weak void USBD_HID_GetReport(uint8_t * OutData, int len){
+    /** default do ntohing */
+}
+
 static uint8_t  USBD_HID_DataOut (USBD_HandleTypeDef *pdev,
                               uint8_t epnum)
 {
+    int len;
 
-  /* Ensure that the FIFO is empty before a new transfer, this condition could
-  be caused by  a new transfer before the end of the previous transfer */
-    // re arm in
+#ifdef DEBUG
+    memcpy(OutDataLog+((nOutData)%8)*8,OutData,8);
+#endif
     nOutData++;
+    // data cpy so we can be ready for next usb out and used received data safely
+    len = USBD_LL_GetRxDataSize (pdev, epnum);
+    memcpy(OutDataBuffer,OutData, len);
     USBD_LL_PrepareReceive(pdev, HID_EPOUT_ADDR, OutData, HID_EPOUT_SIZE);
+    USBD_HID_GetReport(OutDataBuffer, len);
   return USBD_OK;
 }
 
