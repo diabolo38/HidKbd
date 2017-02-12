@@ -263,35 +263,67 @@ void kbd_send_str(const char *str){
 }
 
 
+#define HID_MEDIA_PAUSE  0xB1 // pause
+#define HID_MEDIA_RECORD  0xB3
+#define HID_MEDIA_SCAN_NEXT 0xB5
+#define HID_MEDIA_SCAN_PREV 0xB6
+#define HID_MEDIA_STOP  0xB7
+#define HID_MEDIA_EJECT 0xB8
+#define HID_MEDIA_VOL_UP 0xE9
+#define HID_MEDIA_VOL_DONW 0xEA
+#define HID_MEDIA_PLAY  0xCD // play/pause
+
+
 void  kbd_vol_up(){
     uint8_t report[3];
-    report[0]= VOLUME_REPORT;
+    report[0]= HID_MEDIA_REPORT;
     report[1]= 0xE9;
     report[2]= 0x00;
     USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
     HAL_Delay(30);
 
-    report[0]= VOLUME_REPORT;
+    report[0]= HID_MEDIA_REPORT;
     report[1]= 0x00;
     report[2]= 0x00;
     USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
 
 }
 
+
+
 void  kbd_vol_down(){
     uint8_t report[3];
-    report[0]= VOLUME_REPORT;
-    report[1]= 0xEA;
+    report[0]= HID_MEDIA_REPORT;
+
+    report[1]= HID_MEDIA_VOL_DONW;
+
     report[2]= 0x00;
     USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
     HAL_Delay(30);
 
-    report[0]= VOLUME_REPORT;
+    report[0]= HID_MEDIA_REPORT;
     report[1]= 0x00;
     report[2]= 0x00;
     USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
 
 }
+
+void kbd_do_media(int code){
+    uint8_t report[3];
+    report[0]= HID_MEDIA_REPORT;
+    report[1]= code;
+    report[2]= 0x00;
+    USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
+    HAL_Delay(30);
+
+    report[0]= HID_MEDIA_REPORT;
+    report[1]= 0x00;
+    report[2]= 0x00;
+    USBD_HID_SendReport(&hUsbDeviceFS, report, 3);
+    HAL_Delay(20);
+
+}
+
 
 void USBD_HID_GetReport(uint8_t * report, int len){
     // see from http://www.microchip.com/forums/m433757.aspx
@@ -319,6 +351,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
     int send=0;
     char str[10]="test";
+    int code=0;
 
   /* USER CODE END 1 */
 
@@ -352,7 +385,9 @@ int main(void)
            case 3 :
                kbd_vol_up();
                break;
-
+           case 4:
+               kbd_do_media(code);
+           break;
            }
            HAL_Delay(1000);
            send = 0;

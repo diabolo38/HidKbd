@@ -52,11 +52,14 @@
 #endif
 
  /**  define  VOLUME_REPORT  to tehr eport ID to use for volume or 0 if not support*/
-#ifndef   VOLUME_REPORT
-#   define  VOLUME_REPORT  2
+#define  HID_MEDIA_REPORT  2
+#ifdef   HID_MEDIA_REPORT
+#   define HID_MEDIA_SIZE    25
+#else
+#   define HID_MEDIA_SIZE   0
 #endif
 
-#if VOLUME_REPORT == 1
+#if HID_MEDIA_REPORT == 1
 #     error "volume report can't be 1 already sued for stad report"
 #endif
 
@@ -84,14 +87,6 @@
 
 
 
-
-#if VOLUME_REPORT
-#   define HID_VOL_SIZE    25
-#else
-#   define HID_VOL_SIZE    0
-#endif
-
-
 #if HID_LED_SUPPORT
 #   define HID_LED_SIZE    18
 #else
@@ -100,7 +95,7 @@
 
 
 
-#define HID_REPORT_DESC_SIZE    (47+HID_VOL_SIZE+HID_LED_SIZE)
+#define HID_REPORT_DESC_SIZE    (47+HID_MEDIA_SIZE+HID_LED_SIZE)
 
 
 #define HID_DESCRIPTOR_TYPE           0x21

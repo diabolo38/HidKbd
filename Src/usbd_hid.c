@@ -277,13 +277,21 @@ __ALIGN_BEGIN static uint8_t HID_ReportDesc[HID_REPORT_DESC_SIZE]  __ALIGN_END =
         0xC0,              // End Collection
 
         // 47 bytes
-#if VOLUME_REPORT
+#if HID_MEDIA_REPORT
         //help from http://www.microchip.com/forums/m618147.aspx
+        // this way of describing and sending media control is convenient
+        // short descriptor that permit all kidn meda by sending "usage" code
+        // see usb hid spec for full list
+        // it is possible to define one media key per bit it requires more space
+        // for descripotor and report ending is tighlyu couple to decriptor
+        // so it is not as convenient
+        // one such working code can be find here https://github.com/markwj/hidmedia/blob/master/hidmedia.X/usb_descriptors.c
+        //
 
         0x05, 0x0C,        // Usage Page (Consumer)
         0x09, 0x01,        // Usage (Consumer Control)
         0xA1, 0x01,        // Collection (Application)
-        0x85, VOLUME_REPORT,        //   Report ID (VOLUME_REPORT )
+        0x85, HID_MEDIA_REPORT,        //   Report ID (VOLUME_REPORT )
         0x19, 0x00,        //   Usage Minimum (Unassigned)
         0x2A, 0x3C, 0x02,  //   Usage Maximum (AC Format)
         0x15, 0x00,        //   Logical Minimum (0)
@@ -293,8 +301,13 @@ __ALIGN_BEGIN static uint8_t HID_ReportDesc[HID_REPORT_DESC_SIZE]  __ALIGN_END =
         0x81, 0x00,        //   Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
         0xC0,              // End Collection
 
-        // 25 bytes
+        // how to format the 3 byte report
+        // byte 0 report ID = 0x02 (VOLUME_REPORT)
+        // byte 1 media code  for ex VOL_UP 0xE9 , VOL_DONW 0xEA ... etc
+        // byte 2  0x00
+        // a second  report with 0 code shal be send to avoid "key repaeat"
 
+        // 25 bytes
 #endif
 }; 
 
